@@ -1,0 +1,37 @@
+---
+title: "class13"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+work with structure 1HSG
+```{r}
+library(bio3d) 
+file.name <- get.pdb("1hsg")
+```
+Read this into R and examine composition
+```{r}
+hiv <- read.pdb(file.name)
+hiv
+```
+ Q1: What is the name of the two non protein resid values in this structure? 
+ ~HOH and MK1
+ What does resid correspond to and how would you get a listing of all reside values in this structure?
+
+## Split into protein and ligand files
+
+we will use the 'trim.pdb()' function to split our structure
+
+```{r}
+prot <- trim.pdb(hiv, "protein")
+lig  <- trim.pdb(hiv, "ligand")
+
+#now write these into their own pdb file
+write.pdb(prot, file="1hsg_protein.pdb")
+write.pdb(lig, file="1hsg_ligand.pdb")
+```
+ 
