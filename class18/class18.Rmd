@@ -1,0 +1,154 @@
+---
+title: "class18"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r message=FALSE}
+library(GenomicDataCommons)
+library(maftools)
+```
+
+```{r}
+GenomicDataCommons::status()
+```
+
+```{r}
+cases_by_project <- cases() %>%
+  facet("project.project_id") %>%
+  aggregations()
+head(cases_by_project)
+```
+
+```{r}
+x <- cases_by_project$project.project_id
+
+# Make a custom color vector for our plot
+colvec <- rep("lightblue", nrow(x))
+colvec[x$key=="TCGA-PAAD"] <- "red"
+
+# Plot with 'log' for y axis and rotate labels with 'las'
+par(mar=c(10, 4, 2, 2))
+barplot(x$doc_count, names.arg=x$key, log="y", col=colvec, las=2)
+```
+
+```{r}
+## This code snipet is taken from the package vignette
+file_records <- files() %>%
+  filter(~ cases.project.project_id == "TCGA-PAAD" &
+    data_type == "Gene Expression Quantification" &
+    analysis.workflow_type == "HTSeq - Counts") %>%
+  response_all()
+```
+
+```{r}
+head(file_records)
+```
+
+##Variant analysis with R
+
+```{r}
+maf.files = files() %>%
+    filter(~ cases.project.project_id == 'TCGA-PAAD' &
+        data_type == 'Masked Somatic Mutation' &
+        data_format == "MAF" &
+        analysis.workflow_type == "MuTect2 Variant Aggregation and Masking"
+    ) %>%
+    response_all()
+
+#View(maf.files)
+attributes(maf.files)
+```
+
+```{r}
+head(maf.files$results)
+```
+
+```{r}
+uid <- ids(maf.files)
+uid
+#maffile = gdcdata(uid, destination_dir =".")
+maffile = gdcdata(uid)
+
+maffile
+```
+```{r}
+vars = read.maf(maf = maffile, verbose = FALSE)
+plotmafSummary(maf =vars, rmOutlier = TRUE,
+               addStat = 'median', dashboard = TRUE,
+               titvRaw = FALSE)
+```
+
+```{r}
+oncoplot(maf = vars, top = 10)
+```
+
+```{r}
+# Oncoplot for our top 10 most frequently mutated genes
+pdf("oncoplot_panc.pdf")
+oncoplot(maf = vars, top = 10, fontSize = 12)
+dev.off()
+```
+
+
+```{r}
+oncostrip(maf=vars, genes=c("KRAS", "TP53"))
+```
+
+```{r}
+lollipopPlot(maf = vars, gene = 'KRAS', 
+                         showMutationRate = TRUE, domainLabelSize = 3)
+```
+
+```{r}
+library(bio3d)
+
+seqs <- read.fasta("lecture18_sequences.fa")
+
+seqs
+```
+```{r}
+score <- conserv(seqs, method="identity")
+mutant.inds <- which(score < 1)
+```
+```{r}
+#these are the ones with differences
+seqs$ali[, mutant.inds]
+```
+exclude gaps?
+try gap.inspect function and f.inds output which gives nongaps back
+```{r}
+gaps <- gap.inspect(seqs)
+gaps$f.inds
+#this gives all non gaps - same or different
+seqs$ali[, gaps$f.inds]
+```
+
+compine them with %in% finds what overlaps
+```{r}
+mutant.positions <- mutant.inds[mutant.inds %in% gaps$f.inds]
+mutant.positions
+```
+
+want -8 and 8 of positions
+```{r}
+start.position <- mutant.positions - 8
+end.position <- mutant.positions + 8 
+```
+
+```{r}
+start.position
+```
+```{r}
+end.position
+```
+```{r}
+seqs$ali[,start.position[1]:end.position[1]]
+```
+
+
+
+
