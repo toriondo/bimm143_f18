@@ -1,0 +1,143 @@
+---
+title: "Class11"
+name: "Tori Ondo"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## GitHub Documents
+Download CSV file - Move this CSV file into your RStudio project
+```{r}
+pdbstats <- read.csv("Data Export Summary.csv", row.names=1)
+```
+lets look at the table
+```{r}
+library(knitr)
+kable(pdbstats)
+```
+
+determine the percentage of structures solved by X-Ray and Electron Microscopy. From the website what proportion of structures are protein?
+```{r}
+nstru <- sum(pdbstats$Total)
+nstru
+percent <- round(pdbstats$Total / nstru*100, 2) #proportion of structures that are each type (XRAY...)
+```
+
+A1. There are `r percent[1]` % X-ray structures and `r percent[3]` % EM structures in the PDB database as of `r Sys.Date()`
+
+```{r}
+#this adds the colom of percent into the table
+nstats <- pdbstats
+nstats$percent <- percent
+kable(nstats)
+```
+
+
+The proportion of protein entries
+```{r}
+npro <- sum(pdbstats$Proteins)
+propro <- round(npro/nstru*100, 2) #proportion of sturucture that are proteins 
+```
+
+A1B. The proportion of protein entries is `r propro` %
+
+
+```{r}
+library(bio3d)
+# to see list of functions avaialable use    lbio3d()
+
+pdb <- read.pdb("1hsg")
+pdb
+```
+
+```{r}
+attributes(pdb)
+# Print a subset of $atom data for the first two atoms  
+pdb$atom[1:2, c("eleno", "elety", "x","y","z")]
+
+# Note that individual $atom records can also be accessed like this 
+pdb$atom$elety[1:2]
+
+# Which allows us to do the following 
+plot.bio3d(pdb$atom$b[pdb$calpha], sse=pdb, typ="l", ylab="B-factor")
+```
+
+Q7) What type of R object is pdb$atom?
+```{r}
+str(pdb$atom)
+```
+
+```{r}
+# Print a summary of the coordinate data in $xyz
+pdb$xyz
+
+# Examine the row and column dimensions  
+dim(pdb$xyz)
+
+# Print coordinates for the first two atom
+pdb$xyz[ 1, atom2xyz(1:2) ]
+```
+
+```{r}
+# Select all C-alpha atoms (return their indices)  
+ca.inds <- atom.select(pdb, "calpha") 
+ca.inds
+```
+
+```{r}
+# Print details of the first few selected atoms  
+head( pdb$atom[ca.inds$atom, ] )
+
+# And selected xyz coordinates  
+head( pdb$xyz[, ca.inds$xyz] )
+```
+
+```{r}
+# Select chain A 
+a.inds <- atom.select(pdb, chain="A") 
+ 
+# Select C-alphas of chain A 
+ca.inds <- atom.select(pdb, "calpha", chain="A") 
+ 
+# We can combine multiple selection criteria to return their intersection 
+cab.inds <- atom.select(pdb, elety=c("CA","CB"), chain="A", resno=10:20)
+```
+
+
+## Aligning multiple stuructures
+```{r}
+# Download some example PDB files 
+ids <- c("1TND_B","1AGR_A","1TAG_A","1GG2_A","1KJY_A","4G5Q_A")  
+files <- get.pdb(ids, split = TRUE)
+```
+
+```{r}
+# Extract and align the chains we are interested in  
+pdbs <- pdbaln(files, fit = TRUE)
+ 
+# Print to screen a summary of the 'pdbs' object  
+pdbs
+```
+
+```{r}
+# find invariant core
+core <- core.find(pdbs)
+# superimpose all structures to core
+pdbs$xyz = pdbfit(pdbs, core)
+# Perform PCA
+pc.xray <- pca(pdbs)
+```
+
+look at the results
+```{r}
+plot(pc.xray)
+```
+
+```{r}
+ # Visualize first principal component
+pc1 <- mktrj(pc.xray, pc=1, file="pc_1.pdb")
+```
+
