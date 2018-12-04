@@ -9,3 +9,5 @@ my class repository for BIMM-143 (Intro to Bioinformatics) at UCSD
 - [class 11](https://github.com/toriondo/bimm143_f18/blob/master/class11/class11.md)
 - [class 13](https://github.com/toriondo/bimm143_f18/blob/master/class13/class13.md)
 - [class 14](https://github.com/toriondo/bimm143_f18/blob/master/class14/class13.md)
+- [class 16](https://github.com/toriondo/bimm143_f18/blob/master/class16/class16.md)
+- [class 18](https://github.com/toriondo/bimm143_f18/blob/master/class18/class18.md)
